@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Developer Job Board</title>
+<style>
+:root{
+  --bg:#f6f7f9;--card:#fff;--ink:#16191d;--muted:#5d6670;--line:#e2e5ea;
+  --accent:#0b62c4;--accent-soft:#e6f0fb;
+  --ok:#0b7a3e;--ok-soft:#e3f4ea;--mid:#8a5a00;--mid-soft:#fbf1dc;--none:#6b7280;--none-soft:#eef0f3;
+  --warn:#b42318;--warn-soft:#fdecea;--new:#6d28d9;--new-soft:#efe8fd;--teal:#0f766e;--teal-soft:#e0f2f1;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1216;--card:#171b21;--ink:#e8ebef;--muted:#9aa4af;--line:#2a3038;
+  --accent:#5aa2f0;--accent-soft:#16283d;
+  --ok:#4fc486;--ok-soft:#132a1f;--mid:#e0b057;--mid-soft:#2b2312;--none:#9aa4af;--none-soft:#22272e;
+  --warn:#f07167;--warn-soft:#3a1d1b;--new:#b69cf7;--new-soft:#241c3a;--teal:#4fd1c5;--teal-soft:#11302d;
+}}
+:root[data-theme="dark"]{
+  --bg:#0f1216;--card:#171b21;--ink:#e8ebef;--muted:#9aa4af;--line:#2a3038;
+  --accent:#5aa2f0;--accent-soft:#16283d;
+  --ok:#4fc486;--ok-soft:#132a1f;--mid:#e0b057;--mid-soft:#2b2312;--none:#9aa4af;--none-soft:#22272e;
+  --warn:#f07167;--warn-soft:#3a1d1b;--new:#b69cf7;--new-soft:#241c3a;--teal:#4fd1c5;--teal-soft:#11302d;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 60px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+header h1{font-size:22px;margin:0}
+header p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:18px 0}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;text-align:left;color:inherit;font:inherit}
+.stat b{display:block;font-size:22px;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:12px}
+.stat.on{outline:2px solid var(--accent)}
+.filters{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;position:sticky;top:0;z-index:2}
+.filters input[type=search]{flex:1 1 220px;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+select{padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;max-width:100%}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:5px 11px;font:inherit;font-size:13px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+.count{color:var(--muted);font-size:13px;margin:14px 2px 8px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.count button{background:none;border:0;color:var(--accent);cursor:pointer;font:inherit;font-size:13px;padding:0}
+.job{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:grid;grid-template-columns:1fr auto;gap:4px 12px}
+.job.dim{opacity:.6}
+.job h2{font-size:16px;margin:0;line-height:1.3}
+.job h2 a{color:var(--ink);text-decoration:none}
+.job h2 a:hover{color:var(--accent);text-decoration:underline}
+.emp{color:var(--muted);font-size:14px}
+.meta{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--muted);grid-column:1/-1}
+.meta strong{color:var(--ink);font-weight:600}
+.where{grid-column:1/-1;font-size:13px;color:var(--ink)}
+.tags{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px}
+.tag{font-size:12px;border-radius:5px;padding:1px 7px;background:var(--accent-soft);color:var(--accent)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.snip{grid-column:1/-1;font-size:13px;color:var(--muted);margin:2px 0 0}
+.side{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.badge{font-size:12px;font-weight:600;border-radius:6px;padding:2px 8px;white-space:nowrap}
+.b-APPLY{background:var(--ok-soft);color:var(--ok)}
+.b-REVIEW{background:var(--mid-soft);color:var(--mid)}
+.b-worldwide,.b-region{background:var(--teal-soft);color:var(--teal)}
+.b-nigeria{background:var(--accent-soft);color:var(--accent)}
+.b-visa{background:var(--new-soft);color:var(--new)}
+.b-unclear{background:var(--none-soft);color:var(--none)}
+.b-new{background:var(--new-soft);color:var(--new)}
+.b-closed{background:var(--none-soft);color:var(--warn)}
+.score{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.actions{grid-column:1/-1;display:flex;gap:8px;margin-top:6px}
+.actions a{font:inherit;font-size:13px;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:7px;padding:4px 10px;text-decoration:none}
+.status{font:inherit;font-size:13px;border-radius:7px;padding:4px 8px}
+.status.set{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);font-weight:600}
+.empty{text-align:center;color:var(--muted);padding:40px 0}
+.account{font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.account button,.account input{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:7px;padding:5px 10px}
+.account button{cursor:pointer}
+.account button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.account form{display:flex;gap:6px;flex-wrap:wrap}
+.account input{width:170px;max-width:100%}
+.msg{color:var(--warn);font-size:13px}
+.pager{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:6px;margin:16px 0}
+.pager[hidden]{display:none}
+.pager button{min-width:38px;padding:7px 10px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;font:inherit;font-size:14px;cursor:pointer;font-variant-numeric:tabular-nums}
+.pager button[aria-current=page]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;cursor:default}
+.pager button:disabled{opacity:.4;cursor:default}
+.pager .gap{color:var(--muted);padding:0 2px}
+details.help{margin-top:22px;font-size:13px;color:var(--muted)}
+details.help summary{cursor:pointer;color:var(--ink)}
+details.help a{color:var(--accent)}
+@media (max-width:760px){
+  .stats{grid-template-columns:repeat(3,1fr)}
+}
+@media (max-width:640px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .account input{width:100%}
+  .pager .wide{display:none}
+  .filters{position:static}
+  .job{grid-template-columns:1fr}
+  .side{flex-direction:row;flex-wrap:wrap;align-items:center}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div>
+    <h1>Developer jobs: remote, Nigeria &amp; relocation</h1>
+    <p id="updated"></p>
+  </div>
+  <div class="account" id="account"></div>
+</header>
+
+<div class="stats" id="stats"></div>
+
+<div class="filters" id="filters">
+  <input type="search" id="q" placeholder="Search role, company, tech…" aria-label="Search">
+  <div class="chips" id="labelChips" role="group" aria-label="Recommendation"></div>
+  <div class="chips" id="accessChips" role="group" aria-label="Location access"></div>
+  <select id="tech" aria-label="Technology">
+    <option value="">Any tech</option><option value="angular">Angular</option><option value="react">React</option>
+    <option value="typescript">TypeScript</option><option value=".net">.NET / C#</option><option value="node">Node.js</option>
+  </select>
+  <select id="type" aria-label="Job type"><option value="">Any type</option></select>
+  <select id="source" aria-label="Source"><option value="">All sources</option></select>
+  <select id="sort" aria-label="Sort">
+    <option value="best">Best match</option><option value="new">Newest first</option><option value="salary">Highest salary</option>
+  </select>
+  <div class="chips">
+    <button class="chip" id="newOnly" aria-pressed="false">New only</button>
+    <button class="chip" id="showHidden" aria-pressed="false">Show hidden</button>
+    <button class="chip" id="tracked" aria-pressed="false">My applications</button>
+  </div>
+</div>
+
+<div class="count"><span id="count"></span><button id="reset">Reset filters</button></div>
+<div id="list"></div>
+<nav class="pager" id="pager" aria-label="Pages" hidden></nav>
+
+<details class="help">
+  <summary>How jobs are chosen and labelled</summary>
+  <p><b>APPLY</b>: strong match with your stack and seniority, and the location is open to you. <b>REVIEW</b>: worth a look, but something needs checking (the remote restriction isn't stated, lead/staff level, a different main stack, a weaker match). Jobs restricted to other countries, onsite abroad without sponsorship, or below US$1,000/month are left out.</p>
+  <p><b>Remote – worldwide</b>: the board or advert says anywhere / worldwide. <b>Remote – Africa/EMEA/time zone</b>: the allowed region includes Nigeria, or a time-zone window covers Lagos (UTC+1). <b>Nigeria</b>: based in Nigeria. <b>Visa / relocation</b>: abroad, and the advert mentions visa sponsorship or relocation support. <b>Unclear</b>: remote, but no restriction stated, or the board and advert disagree.</p>
+  <p>Boards often tag a role "Worldwide" while the advert limits it to certain countries. Where the advert says so, the job is left out or marked Unclear with the advert's words quoted. Always confirm on the advert.</p>
+  <p>Sources: <a href="https://himalayas.app" target="_blank" rel="noopener">Himalayas</a>, <a href="https://remotive.com" target="_blank" rel="noopener">Remotive</a>, <a href="https://jobicy.com" target="_blank" rel="noopener">Jobicy</a>, <a href="https://weworkremotely.com" target="_blank" rel="noopener">We Work Remotely</a>, <a href="https://www.workingnomads.com" target="_blank" rel="noopener">Working Nomads</a>, <a href="https://remoteok.com" target="_blank" rel="noopener">Remote OK</a>, <a href="https://www.arbeitnow.com" target="_blank" rel="noopener">Arbeitnow</a>, <a href="https://news.ycombinator.com/submitted?id=whoishiring" target="_blank" rel="noopener">Hacker News: Who is hiring</a>, <a href="https://www.hotnigerianjobs.com" target="_blank" rel="noopener">Hot Nigerian Jobs</a>, <a href="https://www.jobsinnigeria.careers" target="_blank" rel="noopener">Jobs in Nigeria</a>.</p>
+</details>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const DATA = /*__DATA__*/null;
+const SUPA = /*__SUPABASE__*/null;
+const STATUS = {saved:"Saved", applied:"Applied", interview:"Interview", offer:"Offer", rejected:"Rejected", hidden:"Hidden"};
+const STATUS_ORDER = ["offer", "interview", "applied", "saved", "rejected"];
+const LABELS = {APPLY:"Apply", REVIEW:"Review"};
+const ACCESS = {worldwide:"Remote – worldwide", region:"Remote – Africa/EMEA/time zone", nigeria:"Nigeria", visa:"Visa / relocation", unclear:"Unclear"};
+const STATUS_TABLE = "dev_job_status";
+// The nurse dashboard shares this origin's storage, so every key here is prefixed.
+const KEY = k => "dev:" + k;
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(KEY(k)); return v ? JSON.parse(v) : d }catch(e){ return d } },
+  set(k, v){ try{ localStorage.setItem(KEY(k), JSON.stringify(v)) }catch(e){} }
+};
+let marks = store.get("marks", {});
+let sb = null, user = null, accountMsg = "", showForm = false;
+const defaults = {q:"", labels:["APPLY","REVIEW"], access:["worldwide","region","nigeria","visa"], tech:"", type:"", source:"", sort:"best", newOnly:false, showHidden:false, tracked:false};
+let f = Object.assign({}, defaults, store.get("filters", {}), {q: ""});
+const saveFilters = () => store.set("filters", {...f, q: ""});
+const PAGE = 30;
+let page = 1;
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const today = new Date(); today.setHours(0,0,0,0);
+const days = d => d ? Math.round((new Date(d + "T00:00:00") - today) / 864e5) : null;
+const DATE_FMT = new Intl.DateTimeFormat("en-GB", {day:"numeric", month:"short"});
+const fmtDate = d => d ? DATE_FMT.format(new Date(d + "T00:00:00")) : "";
+const isNew = j => days(j.first_seen) >= -1;
+const typeOf = j => /contract|freelance/i.test(j.job_type) ? "Contract" : /part/i.test(j.job_type) ? "Part-time" : /full|permanent/i.test(j.job_type) ? "Full-time" : "Not stated";
+const usd = j => j.usd_year || 0;   // approximate US$/year, worked out by find_jobs.py
+
+const jobs = DATA ? DATA.jobs : [];
+const open = jobs.filter(j => j.active !== false);
+const isTracked = j => marks[j.id] && marks[j.id] !== "hidden";
+$("updated").textContent = DATA
+  ? `Updated ${new Date(DATA.generated).toLocaleString("en-GB", {weekday:"short", day:"numeric", month:"short", hour:"2-digit", minute:"2-digit"})} · ${open.length} roles open to someone based in ${DATA.home}`
+  : "No data yet. Run find_jobs.py.";
+
+[...new Set(jobs.map(typeOf))].sort().forEach(t => $("type").add(new Option(t, t)));
+[...new Set(jobs.map(j => j.source))].sort().forEach(s => $("source").add(new Option(s, s)));
+
+function stats(){
+  const n = (k, v) => open.filter(j => j[k] === v && marks[j.id] !== "hidden").length;
+  const cards = [
+    ["APPLY", n("label", "APPLY"), "Recommended: apply"],
+    ["worldwide", n("access", "worldwide"), "Remote worldwide"],
+    ["region", n("access", "region"), "Remote Africa/EMEA/time zone"],
+    ["nigeria", n("access", "nigeria"), "In Nigeria"],
+    ["visa", n("access", "visa"), "Visa / relocation"],
+    ["tracked", jobs.filter(isTracked).length, user ? "My applications" : "My applications (this device)"],
+  ];
+  $("stats").innerHTML = cards.map(([k, v, l]) => {
+    const on = (k === "tracked" && f.tracked) || (k === "APPLY" && f.labels.length === 1 && f.labels[0] === "APPLY")
+      || (k in ACCESS && f.access.length === 1 && f.access[0] === k);
+    return `<button class="stat${on ? " on" : ""}" data-k="${k}"><b>${v}</b><span>${l}</span></button>`;
+  }).join("");
+  $("stats").querySelectorAll(".stat").forEach(b => b.onclick = () => {
+    const k = b.dataset.k;
+    if (k === "tracked") f.tracked = !f.tracked;
+    else if (k === "APPLY") f.labels = (f.labels.length === 1 && f.labels[0] === "APPLY") ? [...defaults.labels] : ["APPLY"];
+    else f.access = (f.access.length === 1 && f.access[0] === k) ? [...defaults.access] : [k];
+    page = 1; sync(); render();
+  });
+}
+
+function chipGroup(id, options, key){
+  $(id).innerHTML = Object.entries(options).map(([k, l]) =>
+    `<button class="chip" data-k="${k}" aria-pressed="${f[key].includes(k)}">${l}</button>`).join("");
+  $(id).querySelectorAll(".chip").forEach(b => b.onclick = () => {
+    const k = b.dataset.k;
+    f[key] = f[key].includes(k) ? f[key].filter(x => x !== k) : [...f[key], k];
+    page = 1; sync(); render();
+  });
+}
+
+function sync(){
+  $("q").value = f.q; $("tech").value = f.tech; $("type").value = f.type; $("source").value = f.source; $("sort").value = f.sort;
+  $("newOnly").setAttribute("aria-pressed", f.newOnly);
+  $("showHidden").setAttribute("aria-pressed", f.showHidden);
+  $("tracked").setAttribute("aria-pressed", f.tracked);
+  chipGroup("labelChips", LABELS, "labels");
+  chipGroup("accessChips", ACCESS, "access");
+  saveFilters();
+}
+
+function visible(){
+  const q = f.q.trim().toLowerCase();
+  const text = j => `${j.title} ${j.company} ${(j.skills || []).join(" ")} ${j.access_note}`.toLowerCase().includes(q);
+  if (f.tracked) {
+    return jobs.filter(j => isTracked(j) && (!q || text(j)))
+      .sort((a, b) => STATUS_ORDER.indexOf(marks[a.id]) - STATUS_ORDER.indexOf(marks[b.id]) || b.score - a.score);
+  }
+  const list = open.filter(j =>
+    f.labels.includes(j.label)
+    && f.access.includes(j.access)
+    && (!f.tech || (j.skills || []).includes(f.tech) || (f.tech === ".net" && (j.skills || []).includes("c#")))
+    && (!f.type || typeOf(j) === f.type)
+    && (!f.source || j.source === f.source)
+    && (!f.newOnly || isNew(j))
+    && (f.showHidden || marks[j.id] !== "hidden")
+    && (!q || text(j)));
+  const by = {
+    best: (a, b) => (a.label === "APPLY" ? 0 : 1) - (b.label === "APPLY" ? 0 : 1) || b.score - a.score,
+    new: (a, b) => (b.posted || "").localeCompare(a.posted || "") || b.score - a.score,
+    salary: (a, b) => usd(b) - usd(a) || b.score - a.score,
+  }[f.sort];
+  return list.sort(by);
+}
+
+function card(j){
+  const m = marks[j.id], d = days(j.closes);
+  const opts = `<option value="">Track…</option>` + Object.entries(STATUS).map(([k, l]) => `<option value="${k}"${m === k ? " selected" : ""}>${l}</option>`).join("");
+  const tags = (j.skills || []).map(s => `<span class="tag">${esc(s)}</span>`).join("")
+    + (j.notes || []).map(n => `<span class="tag warn">${esc(n)}</span>`).join("");
+  return `<article class="job${m === "rejected" || m === "hidden" || j.active === false ? " dim" : ""}" data-id="${esc(j.id)}">
+    <div><h2><a href="${esc(j.url)}" target="_blank" rel="noopener">${esc(j.title)}</a></h2>
+      <div class="emp">${esc(j.company)}</div></div>
+    <div class="side">
+      <span class="badge b-${j.label}">${LABELS[j.label] || j.label}</span>
+      <span class="badge b-${j.access}">${ACCESS[j.access] || j.access}</span>
+      ${j.active === false ? `<span class="badge b-closed">Closed</span>` : isNew(j) ? `<span class="badge b-new">New</span>` : ""}
+      <span class="score">Match ${j.score}</span>
+    </div>
+    <div class="where">${esc(j.access_note)}</div>
+    <div class="meta">
+      ${j.salary ? `<strong>${esc(j.salary)}</strong>` : ""}
+      ${j.job_type ? `<span>${esc(j.job_type)}</span>` : ""}
+      ${j.posted ? `<span>Posted ${fmtDate(j.posted)}</span>` : ""}
+      ${j.closes ? `<span>Closes ${d === 0 ? "today" : fmtDate(j.closes)}</span>` : ""}
+      <span>via ${esc(j.source)}</span>
+    </div>
+    ${tags ? `<div class="tags">${tags}</div>` : ""}
+    ${j.snippet ? `<p class="snip">${esc(j.snippet)}…</p>` : ""}
+    <div class="actions">
+      <a href="${esc(j.url)}" target="_blank" rel="noopener">View advert</a>
+      <select class="status${m ? " set" : ""}" data-id="${esc(j.id)}" aria-label="Application status">${opts}</select>
+    </div>
+  </article>`;
+}
+
+let current = [];
+const pageCount = () => Math.max(1, Math.ceil(current.length / PAGE));
+const narrow = matchMedia("(max-width:640px)");
+function pageItems(){
+  const n = pageCount(), dd = narrow.matches ? 0 : 2, keep = new Set([1, n]);
+  for (let p = page - dd; p <= page + dd; p++) keep.add(p);
+  const items = [];
+  for (let p = 1; p <= n; p++) {
+    if (keep.has(p)) items.push(p);
+    else if (items[items.length - 1] !== "…") items.push("…");
+  }
+  return items;
+}
+function renderPager(){
+  const n = pageCount();
+  $("pager").hidden = n <= 1;
+  if (n <= 1) { $("pager").innerHTML = ""; return; }
+  $("pager").innerHTML =
+    `<button data-p="${page - 1}" ${page === 1 ? "disabled" : ""} aria-label="Previous page">‹<span class="wide"> Prev</span></button>`
+    + pageItems().map(p => p === "…" ? `<span class="gap">…</span>`
+        : `<button data-p="${p}"${p === page ? ` aria-current="page"` : ""} aria-label="Page ${p}">${p}</button>`).join("")
+    + `<button data-p="${page + 1}" ${page === n ? "disabled" : ""} aria-label="Next page"><span class="wide">Next </span>›</button>`;
+}
+function updateCount(){
+  const from = (page - 1) * PAGE + 1, to = Math.min(page * PAGE, current.length);
+  const total = `${current.length} ${f.tracked ? "tracked " : ""}job${current.length === 1 ? "" : "s"}`;
+  $("count").textContent = pageCount() > 1 ? `${from}–${to} of ${total}` : total;
+}
+function render(){
+  stats();
+  current = visible();
+  page = Math.min(Math.max(1, page), pageCount());
+  const slice = current.slice((page - 1) * PAGE, page * PAGE);
+  $("list").innerHTML = slice.length ? slice.map(card).join("")
+    : `<p class="empty">${f.tracked ? "Nothing tracked yet. Use the Track… menu on a job." : "No jobs match these filters."}</p>`;
+  updateCount();
+  renderPager();
+}
+function goToPage(p){
+  page = p;
+  render();
+  const bar = getComputedStyle($("filters")).position === "sticky" ? $("filters").offsetHeight + 8 : 8;
+  window.scrollTo({top: $("count").getBoundingClientRect().top + window.scrollY - bar});
+}
+$("pager").addEventListener("click", e => {
+  const b = e.target.closest("button[data-p]");
+  if (b && !b.disabled && !b.hasAttribute("aria-current")) goToPage(+b.dataset.p);
+});
+
+function redrawJob(id){
+  const el = $("list").querySelector(`article[data-id="${CSS.escape(id)}"]`);
+  if (!visible().some(j => j.id === id)) return render();
+  stats();
+  if (el) el.outerHTML = card(jobs.find(j => j.id === id));
+}
+$("list").addEventListener("change", e => {
+  const sel = e.target.closest("select.status");
+  if (sel) setStatus(sel.dataset.id, sel.value);
+});
+
+async function setStatus(id, status){
+  const prev = marks[id];
+  if (status) marks[id] = status; else delete marks[id];
+  redrawJob(id);
+  if (!user) { store.set("marks", marks); return; }
+  const {error} = status
+    ? await sb.from(STATUS_TABLE).upsert({owner: user.id, job_id: id, status})
+    : await sb.from(STATUS_TABLE).delete().eq("job_id", id);
+  if (error) {
+    if (prev) marks[id] = prev; else delete marks[id];
+    accountMsg = "Couldn't save: " + error.message; renderAccount(); redrawJob(id);
+  }
+}
+
+// ---- accounts (Supabase). Statuses are private to each login.
+function renderAccount(){
+  const el = $("account");
+  if (!sb) { el.innerHTML = ""; return; }
+  const msg = accountMsg ? `<span class="msg">${esc(accountMsg)}</span>` : "";
+  if (user) {
+    el.innerHTML = `<span>Signed in as ${esc(user.email)}</span><button id="signout">Sign out</button>${msg}`;
+    $("signout").onclick = async () => { await sb.auth.signOut(); };
+  } else if (showForm) {
+    el.innerHTML = `<form id="signin">
+      <input type="email" name="email" placeholder="Email" autocomplete="username" required>
+      <input type="password" name="password" placeholder="Password" autocomplete="current-password" required>
+      <button class="primary">Sign in</button></form>${msg}`;
+    $("signin").onsubmit = async e => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const {error} = await sb.auth.signInWithPassword({email: fd.get("email"), password: fd.get("password")});
+      accountMsg = error ? error.message : "";
+      renderAccount();
+    };
+  } else {
+    el.innerHTML = `<button id="showSignin">Sign in to sync applications</button>${msg}`;
+    $("showSignin").onclick = () => { showForm = true; renderAccount(); };
+  }
+}
+async function loadStatuses(){
+  if (!user) { marks = store.get("marks", {}); render(); return; }
+  const {data, error} = await sb.from(STATUS_TABLE).select("job_id,status");
+  if (error) { accountMsg = "Couldn't load applications: " + error.message; renderAccount(); return; }
+  const server = Object.fromEntries(data.map(r => [r.job_id, r.status]));
+  const known = new Set(jobs.map(j => j.id));
+  const local = Object.entries(store.get("marks", {})).filter(([id]) => !(id in server) && known.has(id))
+    .map(([job_id, status]) => ({owner: user.id, job_id, status}));
+  if (local.length) {
+    const {error: upErr} = await sb.from(STATUS_TABLE).upsert(local);
+    if (!upErr) { local.forEach(r => server[r.job_id] = r.status); store.set("marks", {}); }
+  }
+  marks = server;
+  render();
+}
+async function initAuth(){
+  if (!SUPA || !window.supabase) return;
+  sb = window.supabase.createClient(SUPA.url, SUPA.key);
+  const {data: {session}} = await sb.auth.getSession();
+  user = session ? session.user : null;
+  sb.auth.onAuthStateChange((_event, s) => {
+    const was = user && user.id;
+    user = s ? s.user : null;
+    if ((user && user.id) !== was) { showForm = false; loadStatuses(); }
+    renderAccount();
+  });
+  renderAccount();
+  if (user) await loadStatuses();
+}
+
+$("q").oninput = e => { f.q = e.target.value; page = 1; render(); };
+["tech", "type", "source", "sort"].forEach(id => $(id).onchange = e => { f[id] = e.target.value; page = 1; sync(); render(); });
+$("newOnly").onclick = () => { f.newOnly = !f.newOnly; page = 1; sync(); render(); };
+$("showHidden").onclick = () => { f.showHidden = !f.showHidden; page = 1; sync(); render(); };
+$("tracked").onclick = () => { f.tracked = !f.tracked; page = 1; sync(); render(); };
+$("reset").onclick = () => { f = Object.assign({}, defaults); page = 1; sync(); render(); };
+narrow.addEventListener("change", renderPager);
+sync(); render();
+initAuth();
+</script>
+</body>
+</html>
