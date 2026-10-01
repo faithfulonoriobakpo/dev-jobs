@@ -137,6 +137,7 @@ def himalayas(profile):
     for q in profile["searches"]:
         for scope in ({"worldwide": "true"}, {"country": profile["home_country"]}):
             for page in range(1, 4):
+                time.sleep(1)   # a quick burst of searches gets rate-limited
                 d = fetch_json("https://himalayas.app/jobs/api/search?" + urllib.parse.urlencode({"q": q, "page": page, **scope}))
                 if not d or not d.get("jobs"):
                     break
@@ -570,7 +571,8 @@ class SupabaseStore:
         return {r["id"]: r for r in self._select_all(self.JOBS, "select=id,first_seen&order=id")}
 
     def save(self, jobs, today):
-        rows = [{c: j.get(c) for c in JOB_COLUMNS} for j in jobs]
+        # Unknown dates are "" in memory; Postgres needs null.
+        rows = [{c: (j.get(c) or None) if c in ("posted", "closes") else j.get(c) for c in JOB_COLUMNS} for j in jobs]
         for i in range(0, len(rows), 500):
             self._call("POST", self.JOBS, rows[i:i + 500], prefer="resolution=merge-duplicates,return=minimal")
 
