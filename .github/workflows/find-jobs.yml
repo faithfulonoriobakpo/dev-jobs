@@ -2,7 +2,7 @@ name: Find developer jobs
 
 on:
   schedule:
-    - cron: "0 5 * * *"   # daily, 06:00 Lagos time
+    - cron: "30 */4 * * *"   # every 4 hours (00:30, 04:30 ... UTC; 01:30, 05:30 ... Lagos)
   workflow_dispatch:       # "Run workflow" button on the Actions tab
 
 permissions:
@@ -36,6 +36,8 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

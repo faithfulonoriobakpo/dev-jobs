@@ -162,6 +162,10 @@ def himalayas(profile):
 
 
 def remotive(profile):
+    # Remotive asks API users to call only a few times a day; the search runs every 4 hours, so only the runs
+    # starting at 00, 08 and 16 UTC ask it. Its jobs stay listed for GRACE_DAYS in between.
+    if datetime.now(timezone.utc).hour % 8 >= 4 and not os.getenv("FORCE_ALL_SOURCES"):
+        return []
     d = fetch_json("https://remotive.com/api/remote-jobs?category=software-dev") or {}
     return [job("Remotive", r["id"], r["title"], r["company_name"], r["url"], restriction=r.get("candidate_required_location"),
                 remote=True, salary=r.get("salary") or "", job_type=(r.get("job_type") or "").replace("_", " "),
@@ -596,6 +600,46 @@ def open_store():
     return SupabaseStore(url, key) if url and key else FileStore()
 
 
+# ---------------------------------------------------------------- notifications
+
+def telegram(text):
+    """Send one message to TELEGRAM_CHAT_ID. Never raises: a failed alert mustn't fail the run."""
+    token, chat = os.getenv("TELEGRAM_BOT_TOKEN"), os.getenv("TELEGRAM_CHAT_ID")
+    if not (token and chat):
+        return False
+    body = json.dumps({"chat_id": chat, "text": text, "parse_mode": "HTML", "disable_web_page_preview": True}).encode()
+    try:
+        req = urllib.request.Request(f"https://api.telegram.org/bot{token}/sendMessage", data=body,
+                                     headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return json.loads(r.read()).get("ok", False)
+    except Exception as e:
+        print(f"  ! Telegram message failed: {type(e).__name__}", file=sys.stderr)
+        return False
+
+
+ACCESS_LABEL = {"worldwide": "🌍 Remote worldwide", "region": "🌍 Remote (Africa/EMEA/time zone)", "nigeria": "🇳🇬 Nigeria",
+                "visa": "✈️ Visa / relocation", "unclear": "❔ Remote, unclear"}
+
+
+def notify_new_jobs(new, profile):
+    """One Telegram message listing APPLY jobs seen for the first time this run (best first, up to 10)."""
+    if not new:
+        return
+    esc = lambda s: html.escape(str(s or ""), quote=False)
+    new = sorted(new, key=lambda j: -j["score"])
+    lines = [f"💻 <b>{len(new)} new developer job{'s' if len(new) != 1 else ''} to apply for</b>", ""]
+    for j in new[:10]:
+        extra = " · ".join(filter(None, [ACCESS_LABEL.get(j["access"], j["access"]), esc(j["salary"]), ", ".join(j["skills"][:4])]))
+        lines.append(f"• <a href=\"{esc(j['url'])}\">{esc(j['title'])}</a>, {esc(j['company'])}\n   {extra}")
+    if len(new) > 10:
+        lines.append(f"…and {len(new) - 10} more")
+    if profile.get("dashboard_url"):
+        lines += ["", f"<a href=\"{esc(profile['dashboard_url'])}\">Open the dashboard</a>"]
+    if telegram("\n".join(lines)):
+        print(f"  Telegram: sent {len(new)} new job(s)")
+
+
 def load_env_file(path):
     if path.exists():
         for line in path.read_text(encoding="utf-8").splitlines():
@@ -633,6 +677,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--profile", default=ROOT / "profile.json", type=Path)
     ap.add_argument("--open", action="store_true", help="open the dashboard when done")
+    ap.add_argument("--no-notify", action="store_true", help="don't send the Telegram message for new jobs")
     args = ap.parse_args()
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     load_env_file(ROOT / ".env.local")
@@ -690,6 +735,8 @@ def main():
     for j in sorted(new, key=lambda j: -j["score"])[:10]:
         print(f"  [{j['label']:6} {j['score']:>3}] {j['title']} - {j['company']} ({j['access']}: {j['access_note'][:50]})")
     print(f"Dashboard: {dashboard}")
+    if not args.no_notify:
+        notify_new_jobs([j for j in new if j["label"] == "APPLY"], profile)
     if args.open:
         webbrowser.open(dashboard.as_uri())
 

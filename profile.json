@@ -214,5 +214,6 @@
     "min_usd_per_year": "US$1,000/month. Only applied when a source gives a structured salary",
     "apply_threshold / skip_below": "score >= apply_threshold and an accessible location -> APPLY; score < skip_below -> hidden",
     "title_must_match": "a title needs one of these; a bare 'engineer' isn't enough (it lets in structural, broadcast, site engineers...)"
-  }
+  },
+  "dashboard_url": "https://faithfulonoriobakpo.github.io/dev-jobs/"
 }
